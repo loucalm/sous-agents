@@ -9,31 +9,41 @@ et relit tout ce qu'elles produisent avant de l'accepter.
 |---|---|---|---|
 | `coder` | OpenCode | modèles gratuits OpenCode en cascade, secours Codex | écrire / corriger du code bien spécifié |
 | `reviewer` | Codex CLI (ChatGPT Free) | lecture seule, `model_reasoning_effort=high` | 2ᵉ avis indépendant sur un changement |
-| `bigctx` | Antigravity CLI (`agy`) | texte seul, fichiers numérotés injectés dans le prompt | questions sur beaucoup de fichiers à la fois |
+| `bigctx` | Antigravity CLI (`agy`) | lecture seule via `view_file`, sur copie propre | questions sur beaucoup de fichiers à la fois |
 
-## Installation (sur chaque ordinateur, macOS ou Linux)
+## Installation (sur chaque ordinateur)
 
-C'est un plugin Claude Code chargé automatiquement depuis `~/.claude/skills/sous-agents` :
+C'est un plugin Claude Code chargé automatiquement depuis `~/.claude/skills/sous-agents`.
 
+**macOS / Linux**
 ```bash
 git clone <url-du-dépôt> ~/.claude/skills/sous-agents
+bash ~/.claude/skills/sous-agents/bin/check.sh
 ```
 
-Ensuite : installer et connecter les CLI voulues (`opencode`, `codex login`, `agy`). Celles qui manquent sont ignorées.
-Mise à jour du système : `git -C ~/.claude/skills/sous-agents pull`.
-Windows : les scripts sont en bash, il faut donc passer par WSL ou Git Bash (non testé).
+**Windows** : prérequis [Git for Windows](https://git-scm.com/downloads/win) (fournit Git Bash, que Claude Code utilise
+aussi pour ses commandes et ses hooks). Dans **Git Bash** :
+```bash
+git clone <url-du-dépôt> ~/.claude/skills/sous-agents
+bash ~/.claude/skills/sous-agents/bin/check.sh
+```
 
-Contenu : `SKILL.md` (quand et comment Claude délègue), `bin/` (scripts), `roles/` (prompts de rôle + modèle de brief),
-`hooks/hooks.json` (mise à jour quotidienne des CLI).
+`check.sh` vérifie git/tar et que chaque CLI est installée, connectée et répond. Une CLI absente rend seulement son rôle
+indisponible. Pour installer et connecter les CLI : `opencode` (puis rien, les modèles `-free` marchent sans clé),
+`codex login`, `agy` (1er lancement interactif).
+Mise à jour du système : `git -C ~/.claude/skills/sous-agents pull`.
+
+Contenu : `SKILL.md` (quand et comment Claude délègue), `bin/` (scripts bash : `delegate.sh`, `update-clis.sh`, `check.sh`),
+`roles/` (prompts de rôle + modèle de brief), `hooks/hooks.json` (mise à jour quotidienne des CLI).
 
 ## Utilisation (faite par Claude, d'après SKILL.md)
 
 ```bash
 T=~/.cache/sous-agents/tasks/<projet>-<date>-<nom>   # 1 dossier par tâche, hors du projet
 # écrire $T/BRIEF.md d'après roles/brief-modele.md, puis :
-bin/delegate.sh coder    $T ~/chemin/du/projet      # -> RESULT.md + RESULT.diff (git apply)
-bin/delegate.sh reviewer $T ~/chemin/du/projet      # relit le diff non commité vs HEAD
-bin/delegate.sh bigctx   $T fichier1 fichier2 ...
+bash bin/delegate.sh coder    $T ~/chemin/du/projet               # -> RESULT.md + RESULT.diff (git apply)
+bash bin/delegate.sh reviewer $T ~/chemin/du/projet               # relit le diff non commité vs HEAD
+bash bin/delegate.sh bigctx   $T ~/chemin/du/projet [fichiers...] # questions, sans rien modifier
 ```
 
 ## Critères d'acceptation (appliqués par Claude)
@@ -58,8 +68,13 @@ Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent u
 
 - **stdin** : `codex exec` lit stdin s'il est ouvert et attend indéfiniment. Il faut toujours ajouter `</dev/null` (c'est fait dans le script).
 - **Codex** : l'effort de raisonnement par défaut vaut `none`, et le relecteur rate alors un bug évident. Il faut `-c model_reasoning_effort=high`.
-- **Antigravity** : en mode `-p`, toute action (même lire un fichier) passe par l'outil « command », refusé en headless.
-  D'où le mode texte seul. Le mode `--dangerously-skip-permissions` n'est pas utilisé.
+- **Antigravity** : en mode `-p`, l'outil `run_command` est refusé en headless, mais `view_file` fonctionne.
+  Le prompt impose donc `view_file`. Le mode `--dangerously-skip-permissions` n'est pas utilisé.
+  `agy -p` ne lit pas stdin : pour un prompt passé par stdin, il faut `--input-format stream-json --output-format stream-json --print=`
+  avec des lignes `{"event":"user","message":{"content":"..."}}` (non utilisé pour l'instant).
+- **Windows** : les scripts utilisent `pwd -W` (chemins `C:/...` pour les .exe), `tar` à la place de `rsync`, et
+  `.gitattributes` force les fins de ligne LF (sinon bash casse). Non testé sur un vrai PC au 29/09/2026 : lancer `check.sh`.
+- **Garde-fou** : `check_secrets` doit être appelé directement, jamais derrière un `|` (dans un sous-shell, `exit` n'arrête pas le script).
 - **OpenCode** : les modèles `-free` changent souvent. Vérifier avec `opencode models`, puis mettre à jour `CODER_MODELS` dans `bin/delegate.sh`.
   Les clés Groq / Cerebras / OpenRouter (`opencode auth login`) ne servent que de secours supplémentaire.
 

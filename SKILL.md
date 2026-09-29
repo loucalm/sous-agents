@@ -6,7 +6,7 @@ description: Déléguer du travail mécanique à des CLI gratuites (OpenCode = c
 # Sous-agents CLI gratuits
 
 Claude garde la conception et la validation ; les sous-agents font l'exécution mécanique.
-Script : `~/.claude/skills/sous-agents/bin/delegate.sh` — rôles et pièges détaillés dans `README.md` du même dossier.
+Script : `bash ~/.claude/skills/sous-agents/bin/delegate.sh` (macOS, Linux, Windows via Git Bash) — rôles et pièges détaillés dans `README.md` du même dossier.
 
 ## Déléguer ou pas ?
 
@@ -26,8 +26,8 @@ Déléguer seulement si **tout** est vrai :
 1. **Brief** : `T=~/.cache/sous-agents/tasks/<projet>-<AAAA-MM-JJ>-<nom-court>` ; écrire `$T/BRIEF.md` d'après `roles/brief-modele.md`.
    Court, précis, fichiers à toucher nommés, critère « Terminé quand » exécutable. Aucun secret dans le brief.
 2. **Lancer** (en arrière-plan, ça prend 1 à 3 min) :
-   `~/.claude/skills/sous-agents/bin/delegate.sh <rôle> "$T" <projet-ou-fichiers>`
-   Code de sortie 2 = fichiers sensibles détectés → ne pas contourner, faire la tâche soi-même.
+   `bash ~/.claude/skills/sous-agents/bin/delegate.sh <rôle> "$T" <projet-git> [fichiers pour bigctx]`
+   Code 2 = fichiers sensibles détectés → ne pas contourner, faire la tâche soi-même. Code 3 = aucune réponse de l'agent.
 3. **Valider** — jamais sur la parole de l'agent :
    - `coder` : lire `$T/RESULT.diff` en entier ; `git apply --check` puis `git apply` dans le projet ; exécuter les critères « Terminé quand ».
      Le diff ne doit toucher que ce que demande le brief.
