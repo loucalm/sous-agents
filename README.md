@@ -11,18 +11,30 @@ et relit tout ce qu'elles produisent avant de l'accepter.
 | `reviewer` | Codex CLI (ChatGPT Free) | lecture seule, `model_reasoning_effort=high` | 2ᵉ avis indépendant sur un changement |
 | `bigctx` | Antigravity CLI (`agy`) | texte seul, fichiers numérotés injectés dans le prompt | questions sur beaucoup de fichiers à la fois |
 
-## Utilisation
+## Installation (sur chaque ordinateur, macOS ou Linux)
+
+C'est un plugin Claude Code chargé automatiquement depuis `~/.claude/skills/sous-agents` :
 
 ```bash
-mkdir -p tasks/2026-09-29-nom-court        # 1 dossier par tâche
-$EDITOR tasks/2026-09-29-nom-court/BRIEF.md # à partir de tasks/_BRIEF-modele.md
-bin/delegate.sh coder    tasks/2026-09-29-nom-court ~/chemin/du/projet
-bin/delegate.sh reviewer tasks/2026-09-29-nom-court ~/chemin/du/projet
-bin/delegate.sh bigctx   tasks/2026-09-29-nom-court fichier1 fichier2 ...
+git clone <url-du-dépôt> ~/.claude/skills/sous-agents
 ```
 
-L'agent écrit sa réponse dans `RESULT.md`, à côté du brief. Claude ajoute ensuite une ligne `Verdict : accepté / refusé / corrigé`
-en bas du `RESULT.md`.
+Ensuite : installer et connecter les CLI voulues (`opencode`, `codex login`, `agy`). Celles qui manquent sont ignorées.
+Mise à jour du système : `git -C ~/.claude/skills/sous-agents pull`.
+Windows : les scripts sont en bash, il faut donc passer par WSL ou Git Bash (non testé).
+
+Contenu : `SKILL.md` (quand et comment Claude délègue), `bin/` (scripts), `roles/` (prompts de rôle + modèle de brief),
+`hooks/hooks.json` (mise à jour quotidienne des CLI).
+
+## Utilisation (faite par Claude, d'après SKILL.md)
+
+```bash
+T=~/.cache/sous-agents/tasks/<projet>-<date>-<nom>   # 1 dossier par tâche, hors du projet
+# écrire $T/BRIEF.md d'après roles/brief-modele.md, puis :
+bin/delegate.sh coder    $T ~/chemin/du/projet      # -> RESULT.md + RESULT.diff (git apply)
+bin/delegate.sh reviewer $T ~/chemin/du/projet      # relit le diff non commité vs HEAD
+bin/delegate.sh bigctx   $T fichier1 fichier2 ...
+```
 
 ## Critères d'acceptation (appliqués par Claude)
 
@@ -35,7 +47,10 @@ en bas du `RESULT.md`.
 ## Confidentialité, règles strictes
 
 Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent utiliser les données pour entraîner leurs modèles.
-- Aucun secret : `delegate.sh` **refuse** de partir si le projet contient `.env*`, `*.pem`, `*.key`, `*secret*`, `*credential*`, etc.
+- L'agent travaille sur une **copie propre** du projet (fichiers suivis par git + nouveaux fichiers non ignorés) :
+  les fichiers ignorés par `.gitignore` (où vivent normalement `.env`, clés…) ne sont jamais copiés.
+- `delegate.sh` **refuse** de partir (code 2) si la copie ou les fichiers fournis contiennent `.env*`, `*.pem`, `*.key`,
+  `*secret*`, `*credential*`, etc. Testé le 29/09/2026, après correction d'un bug où le refus ne stoppait pas le script.
 - Pas de code client ou sous contrat de confidentialité. En cas de doute, Claude fait la tâche lui-même.
 - Le codeur ne travaille que dans un dépôt git (pour pouvoir voir et annuler son diff).
 
@@ -63,14 +78,11 @@ mais avec **un faux positif** (valeur attendue fausse). Conclusion : le relecteu
 
 ## Mise à jour automatique
 
-`bin/update-clis.sh` est branché en hook `SessionStart` dans `~/.claude/settings.json`. Il tourne au plus une fois par jour
+`bin/update-clis.sh` est branché en hook `SessionStart` par le plugin (`hooks/hooks.json`). Il tourne au plus une fois par jour
 (horodatage dans `~/.cache/agents-cli/last-check`), en arrière-plan, et ne bloque jamais le démarrage.
 Journal : `~/.cache/agents-cli/update.log`.
 
-| Outil | Installation détectée | Commande de mise à jour |
-|---|---|---|
-| OpenCode | script curl (`~/.opencode/bin`) | `opencode upgrade --method curl` |
-| Codex | installeur autonome (`~/.codex/packages/standalone`) | `codex update` |
-| Antigravity | binaire autonome (`~/.local/bin/agy`) | `agy update` |
+Le mode d'installation est détecté à chaque fois : Homebrew → `brew upgrade`, npm → `npm i -g …@latest`,
+sinon la commande intégrée (`opencode upgrade`, `codex update`, `agy update`).
 
 Pour forcer une vérification : `rm ~/.cache/agents-cli/last-check`.
