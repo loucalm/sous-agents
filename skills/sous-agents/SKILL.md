@@ -46,7 +46,11 @@ L'utilisateur doit toujours savoir quand un sous-agent travaille sur son projet.
    Court, précis, fichiers à toucher nommés, critère « Terminé quand » exécutable. Aucun secret dans le brief.
 2. **Lancer** (en arrière-plan, ça prend 1 à 3 min) :
    `bash ~/.claude/skills/sous-agents/bin/delegate.sh <rôle> "$T" <projet-git> [fichiers pour bigctx]`
-   Code 2 = fichiers sensibles détectés → ne pas contourner, faire la tâche soi-même. Code 3 = aucune réponse de l'agent.
+   Code 3 = aucune réponse de l'agent.
+   Code 5 = fichiers sensibles **suivis par git** (`.env`, clés…) : ne jamais contourner seul. Demander avec AskUserQuestion
+   en citant la liste des fichiers : **Exclure ces fichiers** (recommandé → `SOUS_AGENTS_SENSIBLES=exclure`) /
+   **Les envoyer quand même** (→ `SOUS_AGENTS_SENSIBLES=envoyer`) / **Ne pas déléguer**. Valable pour cet appel seulement.
+   Signaler aussi qu'un `.env` suivi par git est un risque en soi (proposer de l'ajouter à `.gitignore`).
    Code 4 = accord manquant ou refusé (voir ci-dessus).
 3. **Valider** — jamais sur la parole de l'agent :
    - `coder` : lire `$T/RESULT.diff` en entier ; `git apply --check` puis `git apply` dans le projet ; exécuter les critères « Terminé quand ».

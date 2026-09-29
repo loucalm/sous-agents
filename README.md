@@ -69,8 +69,9 @@ bash bin/delegate.sh bigctx   $T ~/chemin/du/projet [fichiers...] # questions, s
 Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent utiliser les données pour entraîner leurs modèles.
 - L'agent travaille sur une **copie propre** du projet (fichiers suivis par git + nouveaux fichiers non ignorés) :
   les fichiers ignorés par `.gitignore` (où vivent normalement `.env`, clés…) ne sont jamais copiés.
-- `delegate.sh` **refuse** de partir (code 2) si la copie ou les fichiers fournis contiennent `.env*`, `*.pem`, `*.key`,
-  `*secret*`, `*credential*`, etc. Testé le 29/09/2026, après correction d'un bug où le refus ne stoppait pas le script.
+- Si des fichiers sensibles (`.env*`, `*.pem`, `*.key`, `*secret*`, `*credential*`…) sont **suivis par git** ou passés
+  en argument, `delegate.sh` s'arrête (code 5) sans rien envoyer. Claude demande alors à l'utilisateur : les exclure
+  (`SOUS_AGENTS_SENSIBLES=exclure`), les envoyer (`SOUS_AGENTS_SENSIBLES=envoyer`) ou ne pas déléguer. Choix valable pour un seul appel.
 - Pas de code client ou sous contrat de confidentialité. En cas de doute, Claude fait la tâche lui-même.
 - Le codeur ne travaille que dans un dépôt git (pour pouvoir voir et annuler son diff).
 

@@ -36,8 +36,14 @@ CODER_MODELS="opencode/big-pickle opencode/nemotron-3-ultra-free opencode/mimo-v
 SECRET_RE='(^|[/\\])(\.env[^/\\]*|[^/\\]*\.(pem|key|p12|pfx)|id_(rsa|ed25519)[^/\\]*|\.npmrc|[^/\\]*(secret|credential)[^/\\]*)$'
 check_secrets() {  # $1 = liste de chemins ; appel direct, jamais derrière un | (sinon exit ne stoppe pas le script)
   found=$(printf '%s\n' "$1" | grep -iE "$SECRET_RE" | grep -v '\.env\.example$')
-  [ -z "$found" ] || { printf 'REFUS : fichiers sensibles, rien n'"'"'est envoyé :\n%s\n' "$found" >&2; exit 2; }
+  [ -z "$found" ] && return
+  case "${SOUS_AGENTS_SENSIBLES:-}" in   # choix explicite de l'utilisateur, pour cet appel seulement
+    exclure)  printf 'Fichiers sensibles exclus de la copie :\n%s\n' "$found" >&2; EXCLUDED=$found ;;
+    envoyer)  printf 'ATTENTION : fichiers sensibles envoyés (accord de l'"'"'utilisateur) :\n%s\n' "$found" >&2 ;;
+    *) printf 'SENSIBLES : rien n'"'"'est envoyé. Demander à l'"'"'utilisateur, puis relancer avec\nSOUS_AGENTS_SENSIBLES=exclure (sans ces fichiers) ou SOUS_AGENTS_SENSIBLES=envoyer (tels quels) :\n%s\n' "$found" >&2; exit 5 ;;
+  esac
 }
+EXCLUDED=
 
 top=$(toplevel "$proj") || exit 1   # $( ) = sous-shell : son exit ne suffit pas
 if grep -qxF "non $top" "$CONSENT" 2>/dev/null; then
@@ -47,11 +53,11 @@ elif ! grep -qxF "ok $top" "$CONSENT" 2>/dev/null && [ "${SOUS_AGENTS_OK:-}" != 
 fi
 
 # Copie propre du projet dans $work, avec un commit de base pour mesurer le diff
-files=$(git -C "$proj" ls-files -co --exclude-standard)
-check_secrets "$files"
-check_secrets "$(printf '%s\n' "$@")"
+files=$(git -C "$proj" -c core.quotepath=off ls-files -co --exclude-standard)
+check_secrets "$files
+$(printf '%s\n' "$@")"
 work=$(abs "$(mktemp -d)")
-git -C "$proj" ls-files -co --exclude-standard -z | (cd "$proj" && tar --null -T - -cf -) | tar -xf - -C "$work"
+printf '%s\n' "$files" | grep -vxF -e "${EXCLUDED:-/nonexistent/}" | grep . | (cd "$proj" && tar -T - -cf -) | tar -xf - -C "$work"
 git -C "$work" init -q
 printf '%s\n' __pycache__/ '*.pyc' node_modules/ .DS_Store dist/ build/ .venv/ > "$work/.git/info/exclude"  # déchets générés par l'agent
 git -C "$work" add -A && git -C "$work" -c user.name=x -c user.email=x -c core.autocrlf=false commit -qm base
@@ -74,7 +80,9 @@ case $role in
     git add -A && git diff --cached --binary > "$task/RESULT.diff"
     echo "Diff : $task/RESULT.diff" >&2 ;;
   reviewer)
-    git -C "$proj" diff HEAD > .changes.diff   # le changement à relire = état actuel du projet vs HEAD
+    # le changement à relire = état actuel du projet vs HEAD (sans les fichiers exclus)
+    ex=(); while IFS= read -r f; do [ -n "$f" ] && ex+=(":(exclude,literal)$f"); done <<< "$EXCLUDED"
+    git -C "$proj" diff HEAD -- . ${ex[@]+"${ex[@]}"} > .changes.diff
     codex exec --skip-git-repo-check -s read-only -c model_reasoning_effort=high -o "$out" "$prompt
 
 Le changement à relire (diff vs HEAD) est dans .changes.diff." </dev/null >/dev/null 2>&1 ;;

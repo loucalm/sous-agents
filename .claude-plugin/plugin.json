@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "sous-agents",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Délégation du travail mécanique à des CLI gratuites (OpenCode, Codex, Antigravity), supervisée par Claude",
   "author": {
     "name": "loucalm",
