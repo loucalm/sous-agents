@@ -33,8 +33,10 @@ indisponible. Pour installer et connecter les CLI : `opencode` (puis rien, les m
 `codex login`, `agy` (1er lancement interactif).
 Mise à jour du système : `git -C ~/.claude/skills/sous-agents pull`.
 
-Contenu : `SKILL.md` (quand et comment Claude délègue), `bin/` (scripts bash : `delegate.sh`, `update-clis.sh`, `check.sh`),
-`roles/` (prompts de rôle + modèle de brief), `hooks/hooks.json` (mise à jour quotidienne des CLI).
+Contenu : `skills/sous-agents/SKILL.md` (quand et comment Claude délègue), `bin/` (scripts bash : `delegate.sh`, `session-start.sh`,
+`update-clis.sh`, `check.sh`), `roles/` (prompts de rôle + modèle de brief), `hooks/hooks.json` (début de session :
+mise à jour quotidienne des CLI + rappel à Claude de l'accord du projet, pour qu'il propose les sous-agents dès le départ).
+Pour vérifier que le plugin est bien chargé : `claude plugin details sous-agents@skills-dir` doit indiquer `Skills (1)`.
 
 ## Utilisation (faite par Claude, d'après SKILL.md)
 
@@ -56,7 +58,7 @@ bash bin/delegate.sh bigctx   $T ~/chemin/du/projet [fichiers...] # questions, s
 
 ## Accord et transparence
 
-- Aucun envoi sans accord de l'utilisateur pour le projet. Claude pose la question avant la première délégation
+- Aucun envoi sans accord de l'utilisateur pour le projet. Claude pose la question en début de session sur tout projet git pas encore décidé
   (oui pour ce projet / juste cette fois / non). Le choix est mémorisé dans `~/.config/sous-agents/projets`
   (par ordinateur ; pour le modifier : `delegate.sh allow|deny <projet>`, pour le lire : `delegate.sh status <projet>`).
 - Le script bloque (code 4) tout projet non autorisé, sauf accord ponctuel `SOUS_AGENTS_OK=1`.

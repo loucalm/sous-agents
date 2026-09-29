@@ -6,7 +6,7 @@ description: Déléguer du travail mécanique à des CLI gratuites (OpenCode = c
 # Sous-agents CLI gratuits
 
 Claude garde la conception et la validation ; les sous-agents font l'exécution mécanique.
-Script : `bash ~/.claude/skills/sous-agents/bin/delegate.sh` (macOS, Linux, Windows via Git Bash) — rôles et pièges détaillés dans `README.md` du même dossier.
+Script : `bash ~/.claude/skills/sous-agents/bin/delegate.sh` (macOS, Linux, Windows via Git Bash) — rôles et pièges détaillés dans `~/.claude/skills/sous-agents/README.md`.
 
 ## Déléguer ou pas ?
 
@@ -25,7 +25,9 @@ Déléguer seulement si **tout** est vrai :
 
 L'utilisateur doit toujours savoir quand un sous-agent travaille sur son projet.
 
-- **Accord par projet**, avant la toute première délégation : `delegate.sh status <projet>`.
+- **Proposer dès le début** : quand le contexte de session contient `[sous-agents] Accord pas encore demandé`, poser la question
+  au début de la première réponse, même si la demande du moment ne s'y prête pas. Idem juste après avoir créé un nouveau projet (`git init`).
+- **Accord par projet**, avant toute délégation : `delegate.sh status <projet>`.
   - `ok` → autorisé, on peut déléguer.
   - `non` → refusé : ne pas redemander, faire la tâche soi-même.
   - `non demandé` → demander avec AskUserQuestion : « Autoriser les sous-agents gratuits (OpenCode, Codex, Antigravity)
@@ -40,7 +42,7 @@ L'utilisateur doit toujours savoir quand un sous-agent travaille sur son projet.
 
 ## Déroulé
 
-1. **Brief** : `T=~/.cache/sous-agents/tasks/<projet>-<AAAA-MM-JJ>-<nom-court>` ; écrire `$T/BRIEF.md` d'après `roles/brief-modele.md`.
+1. **Brief** : `T=~/.cache/sous-agents/tasks/<projet>-<AAAA-MM-JJ>-<nom-court>` ; écrire `$T/BRIEF.md` d'après `~/.claude/skills/sous-agents/roles/brief-modele.md`.
    Court, précis, fichiers à toucher nommés, critère « Terminé quand » exécutable. Aucun secret dans le brief.
 2. **Lancer** (en arrière-plan, ça prend 1 à 3 min) :
    `bash ~/.claude/skills/sous-agents/bin/delegate.sh <rôle> "$T" <projet-git> [fichiers pour bigctx]`
@@ -53,4 +55,4 @@ L'utilisateur doit toujours savoir quand un sous-agent travaille sur son projet.
    - `bigctx` : vérifier les `fichier:ligne` cités avant de s'en servir.
 4. **Refus** : un seul aller-retour avec un brief corrigé ; sinon Claude termine lui-même.
 5. Ajouter en bas de `$T/RESULT.md` : `Verdict : accepté | corrigé | refusé — <raison>`.
-6. Si un modèle, une commande ou un piège a changé : mettre à jour `README.md` / `bin/delegate.sh` et committer dans `~/.claude/skills/sous-agents`.
+6. Si un modèle, une commande ou un piège a changé : mettre à jour `README.md` / `bin/delegate.sh`, committer et pousser dans `~/.claude/skills/sous-agents`.

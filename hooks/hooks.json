@@ -1,7 +1,7 @@
 {
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "bash ~/.claude/skills/sous-agents/bin/update-clis.sh" } ] }
+      { "hooks": [ { "type": "command", "command": "bash ~/.claude/skills/sous-agents/bin/session-start.sh" } ] }
     ]
   }
 }
