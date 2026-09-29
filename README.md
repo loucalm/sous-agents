@@ -54,6 +54,14 @@ bash bin/delegate.sh bigctx   $T ~/chemin/du/projet [fichiers...] # questions, s
 4. Chaque remarque du relecteur est vérifiée avant d'être crue (il se trompe parfois, voir plus bas).
 5. Sinon, on refuse et on renvoie un brief corrigé (un seul aller-retour), ou bien Claude corrige lui-même si c'est plus court.
 
+## Accord et transparence
+
+- Aucun envoi sans accord de l'utilisateur pour le projet. Claude pose la question avant la première délégation
+  (oui pour ce projet / juste cette fois / non). Le choix est mémorisé dans `~/.config/sous-agents/projets`
+  (par ordinateur ; pour le modifier : `delegate.sh allow|deny <projet>`, pour le lire : `delegate.sh status <projet>`).
+- Le script bloque (code 4) tout projet non autorisé, sauf accord ponctuel `SOUS_AGENTS_OK=1`.
+- Claude annonce chaque délégation avant de la lancer et récapitule à la fin ce qui a été délégué, à qui, avec quel verdict.
+
 ## Confidentialité, règles strictes
 
 Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent utiliser les données pour entraîner leurs modèles.

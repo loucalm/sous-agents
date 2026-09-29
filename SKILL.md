@@ -21,6 +21,23 @@ Déléguer seulement si **tout** est vrai :
 | 2ᵉ avis sur un changement non commité | `reviewer` |
 | question sur beaucoup de fichiers (ne modifie rien) | `bigctx` |
 
+## Transparence et accord (obligatoire)
+
+L'utilisateur doit toujours savoir quand un sous-agent travaille sur son projet.
+
+- **Accord par projet**, avant la toute première délégation : `delegate.sh status <projet>`.
+  - `ok` → autorisé, on peut déléguer.
+  - `non` → refusé : ne pas redemander, faire la tâche soi-même.
+  - `non demandé` → demander avec AskUserQuestion : « Autoriser les sous-agents gratuits (OpenCode, Codex, Antigravity)
+    sur <projet> ? Le code envoyé peut servir à entraîner leurs modèles. » Trois options :
+    **Oui pour ce projet** → `delegate.sh allow <projet>` ; **Juste cette fois** → lancer avec `SOUS_AGENTS_OK=1` ;
+    **Non** → `delegate.sh deny <projet>`.
+  - Si l'utilisateur demande lui-même la délégation dans son message, c'est un accord pour cette fois (`SOUS_AGENTS_OK=1`) ;
+    proposer ensuite de l'enregistrer pour le projet.
+  - Ne jamais lancer `allow` ou `SOUS_AGENTS_OK=1` sans réponse explicite de l'utilisateur. Code 4 = accord manquant ou refusé.
+- **Annoncer avant** chaque lancement, en une ligne : quel agent, pour quelle tâche (ex. « Je confie la correction de X à OpenCode »).
+- **Récapituler après** : dans la réponse finale, lister ce qui a été délégué, à quel agent, et le verdict (accepté / corrigé / refusé).
+
 ## Déroulé
 
 1. **Brief** : `T=~/.cache/sous-agents/tasks/<projet>-<AAAA-MM-JJ>-<nom-court>` ; écrire `$T/BRIEF.md` d'après `roles/brief-modele.md`.
@@ -28,6 +45,7 @@ Déléguer seulement si **tout** est vrai :
 2. **Lancer** (en arrière-plan, ça prend 1 à 3 min) :
    `bash ~/.claude/skills/sous-agents/bin/delegate.sh <rôle> "$T" <projet-git> [fichiers pour bigctx]`
    Code 2 = fichiers sensibles détectés → ne pas contourner, faire la tâche soi-même. Code 3 = aucune réponse de l'agent.
+   Code 4 = accord manquant ou refusé (voir ci-dessus).
 3. **Valider** — jamais sur la parole de l'agent :
    - `coder` : lire `$T/RESULT.diff` en entier ; `git apply --check` puis `git apply` dans le projet ; exécuter les critères « Terminé quand ».
      Le diff ne doit toucher que ce que demande le brief.

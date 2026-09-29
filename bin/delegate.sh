@@ -4,13 +4,27 @@
 #   delegate.sh reviewer <dossier-tâche> <projet-git>               -> Codex, lecture seule, effort élevé
 #   delegate.sh bigctx   <dossier-tâche> <projet-git> [fichier...]  -> Antigravity, lecture seule (view_file)
 # Le dossier-tâche contient BRIEF.md ; le script y écrit RESULT.md (réponse) et, pour coder, RESULT.diff (à appliquer avec git apply).
+#   delegate.sh allow|deny|status <projet-git>                      -> accord de l'utilisateur pour ce projet (mémorisé)
 # Les agents travaillent sur une copie propre du projet : fichiers suivis + non suivis non ignorés, jamais les fichiers ignorés.
+# Rien ne part sans accord : projet autorisé (allow) ou accord ponctuel (SOUS_AGENTS_OK=1).
 
 set -u
 abs() { (cd "$1" && { pwd -W 2>/dev/null || pwd; }); }  # pwd -W : chemin C:/... sous Git Bash, pour les .exe Windows
 ROOT=$(abs "$(dirname "$0")/..")
 export PATH="$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
-[ $# -ge 3 ] || { sed -n '2,6p' "$0" >&2; exit 1; }
+CONSENT=$HOME/.config/sous-agents/projets   # lignes "ok <chemin>" ou "non <chemin>"
+toplevel() { git -C "$1" rev-parse --show-toplevel 2>/dev/null || { echo "$1 n'est pas un dépôt git" >&2; exit 1; }; }
+case "${1:-}" in allow|deny|status)
+  [ $# -eq 2 ] || { echo "usage : delegate.sh $1 <projet-git>" >&2; exit 1; }
+  top=$(toplevel "$2") || exit 1; mkdir -p "$(dirname "$CONSENT")"; touch "$CONSENT"
+  if [ "$1" = status ]; then
+    grep -xF -e "ok $top" -e "non $top" "$CONSENT" | cut -d' ' -f1 | grep . || echo "non demandé"; exit 0
+  fi
+  grep -vxF -e "ok $top" -e "non $top" "$CONSENT" > "$CONSENT.tmp"; mv "$CONSENT.tmp" "$CONSENT"
+  [ "$1" = allow ] && echo "ok $top" >> "$CONSENT" || echo "non $top" >> "$CONSENT"
+  echo "$1 : $top"; exit 0
+esac
+[ $# -ge 3 ] || { sed -n '2,7p' "$0" >&2; exit 1; }
 role=$1 task=$(abs "$2") proj=$3; shift 3
 [ -f "$task/BRIEF.md" ] || { echo "BRIEF.md introuvable dans $task" >&2; exit 1; }
 out=$task/RESULT.md
@@ -25,8 +39,14 @@ check_secrets() {  # $1 = liste de chemins ; appel direct, jamais derrière un |
   [ -z "$found" ] || { printf 'REFUS : fichiers sensibles, rien n'"'"'est envoyé :\n%s\n' "$found" >&2; exit 2; }
 }
 
+top=$(toplevel "$proj") || exit 1   # $( ) = sous-shell : son exit ne suffit pas
+if grep -qxF "non $top" "$CONSENT" 2>/dev/null; then
+  echo "REFUS : l'utilisateur a refusé les sous-agents pour $top" >&2; exit 4
+elif ! grep -qxF "ok $top" "$CONSENT" 2>/dev/null && [ "${SOUS_AGENTS_OK:-}" != 1 ]; then
+  echo "ACCORD REQUIS : demander à l'utilisateur, puis 'delegate.sh allow $top' (toujours) ou SOUS_AGENTS_OK=1 (cette fois)" >&2; exit 4
+fi
+
 # Copie propre du projet dans $work, avec un commit de base pour mesurer le diff
-git -C "$proj" rev-parse 2>/dev/null || { echo "$proj n'est pas un dépôt git" >&2; exit 1; }
 files=$(git -C "$proj" ls-files -co --exclude-standard)
 check_secrets "$files"
 check_secrets "$(printf '%s\n' "$@")"
