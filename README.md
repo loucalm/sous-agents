@@ -91,6 +91,8 @@ Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent u
 - **Serveurs** (03/10/2026) : OpenCode lance volontiers un serveur pour vérifier son travail (`node serveur.mjs &` puis `curl`). Si le port
   est déjà pris, il reste bloqué jusqu'à la limite de temps et `RESULT.diff` n'est pas écrit (le fichier reste dans la copie `tmp.*`).
   Écrire dans le brief : « Ne lance aucun serveur ni processus en arrière-plan : la vérification est faite par Claude. »
+  Pour arrêter une délégation, tuer d'abord `delegate.sh` puis `opencode` : tuer seulement `opencode` fait passer la cascade au
+  modèle suivant. La fin du `run_in_background` de Claude ne tue pas non plus `delegate.sh` sous Windows.
 
 ## Banc d'essai du 29/09/2026
 
