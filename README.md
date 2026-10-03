@@ -88,6 +88,9 @@ Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent u
 - **Garde-fou** : `check_secrets` doit être appelé directement, jamais derrière un `|` (dans un sous-shell, `exit` n'arrête pas le script).
 - **OpenCode** : les modèles `-free` changent souvent. Vérifier avec `opencode models`, puis mettre à jour `CODER_MODELS` dans `bin/delegate.sh`.
   Les clés Groq / Cerebras / OpenRouter (`opencode auth login`) ne servent que de secours supplémentaire.
+- **Serveurs** (03/10/2026) : OpenCode lance volontiers un serveur pour vérifier son travail (`node serveur.mjs &` puis `curl`). Si le port
+  est déjà pris, il reste bloqué jusqu'à la limite de temps et `RESULT.diff` n'est pas écrit (le fichier reste dans la copie `tmp.*`).
+  Écrire dans le brief : « Ne lance aucun serveur ni processus en arrière-plan : la vérification est faite par Claude. »
 
 ## Banc d'essai du 29/09/2026
 
