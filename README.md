@@ -93,6 +93,15 @@ Les offres gratuites (OpenCode Zen `-free`, ChatGPT Free, Antigravity) peuvent u
   Écrire dans le brief : « Ne lance aucun serveur ni processus en arrière-plan : la vérification est faite par Claude. »
   Pour arrêter une délégation, tuer d'abord `delegate.sh` puis `opencode` : tuer seulement `opencode` fait passer la cascade au
   modèle suivant. La fin du `run_in_background` de Claude ne tue pas non plus `delegate.sh` sous Windows.
+- **Réponse inventée** (03/10/2026) : OpenCode `big-pickle` a déjà répondu « 6 fichiers créés » sans aucune action d'outil
+  (journal sans `Read`/`Write`, `RESULT.diff` vide). Toujours regarder la taille de `RESULT.diff` ; mettre en tête du brief :
+  « Écris réellement chaque fichier, puis vérifie avec `ls` avant de répondre. »
+- **Codex relecteur sous Windows** (03/10/2026) : en `-s read-only`, il n'a pu exécuter aucune commande de lecture et l'a dit
+  (« exécution bloquée par l'environnement »). Relecture impossible : passer par Antigravity (`bigctx`) ou relire soi-même.
+  Rappel : les fichiers non suivis par git n'apparaissent pas dans `.changes.diff` ; les lister dans le brief.
+- **Antigravity déconnecté** (03/10/2026) : quand sa session Google expire, `agy -p` ouvre la page de connexion et attend un code
+  qu'il ne peut pas recevoir (entrée fermée) : `RESULT.md` vide, code 3. Demander à l'utilisateur de lancer `agy` une fois dans
+  son propre terminal pour se reconnecter (ne jamais saisir le code à sa place).
 
 ## Banc d'essai du 29/09/2026
 
